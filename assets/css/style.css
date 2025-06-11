@@ -189,3 +189,37 @@ main {
 .dark-theme .clocks-grid::-webkit-scrollbar-thumb {
      background-color: rgba(255, 255, 255, 0.2);
 }
+
+/* Styling for Search Container */
+.search-container {
+    max-width: 600px;
+    margin: 0 auto 2rem auto; /* فاصله از بالا و پایین */
+    padding: 0 15px;
+}
+
+#search-input {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1.1rem;
+    font-family: 'Vazirmatn', sans-serif;
+    border-radius: 10px;
+    border: 1px solid var(--clock-border);
+    background-color: var(--clock-bg);
+    color: var(--text-color);
+    box-shadow: var(--clock-shadow);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+    box-sizing: border-box; /* برای جلوگیری از مشکلات عرض */
+}
+
+#search-input::placeholder {
+    color: var(--text-color);
+    opacity: 0.7;
+}
+
+#search-input:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+}
