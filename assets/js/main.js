@@ -90,43 +90,72 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const toggleFavorite = (tz) => {
-        const index = favorites.indexOf(tz);
-        if (index > -1) {
-            favorites.splice(index, 1); // حذف از علاقه‌مندی‌ها
-        } else {
-            favorites.unshift(tz); // اضافه به ابتدای لیست علاقه‌مندی‌ها
-        }
-        localStorage.setItem('worldTimeFavorites', JSON.stringify(favorites));
-        renderClocks(); // بازрисовی ساعت‌ها برای اعمال تغییر
-    };
+    const index = favorites.indexOf(tz);
+    if (index > -1) {
+        favorites.splice(index, 1);
+    } else {
+        favorites.unshift(tz);
+    }
+    localStorage.setItem('worldTimeFavorites', JSON.stringify(favorites));
+
+    // بازسازی لیست اصلی بر اساس علاقه مندی ها
+    allClocksData.sort((a, b) => {
+        const aIsFav = favorites.includes(a.tz);
+        const bIsFav = favorites.includes(b.tz);
+        if (aIsFav && !bIsFav) return -1;
+        if (!bIsFav && aIsFav) return 1;
+        if (aIsFav && bIsFav) return favorites.indexOf(a.tz) - favorites.indexOf(b.tz);
+        return 0;
+    });
+
+    // بررسی اینکه آیا جستجویی فعال است یا خیر
+    const searchTerm = searchInput.value.toLowerCase().trim();
+    if (searchTerm) {
+        // اگر جستجو فعال است، لیست فیلتر شده را دوباره رندر کن
+        const filteredClocks = allClocksData.filter(city => 
+            city.name.toLowerCase().includes(searchTerm) || 
+            city.name_en.toLowerCase().includes(searchTerm)
+        );
+        renderClocks(filteredClocks);
+    } else {
+        // در غیر این صورت، لیست پیش‌فرض را رندر کن
+        renderClocks(allClocksData.slice(0, visibleClocksCount));
+    }
+};
     
-    const renderClocks = () => {
-        // مرتب‌سازی لیست اصلی ساعت‌ها بر اساس لیست علاقه‌مندی‌ها
-        allClocksData = [...timezones].sort((a, b) => {
-            const aIsFav = favorites.includes(a.tz);
-            const bIsFav = favorites.includes(b.tz);
-            if (aIsFav && !bIsFav) return -1;
-            if (!bIsFav && aIsFav) return 1;
-            if (aIsFav && bIsFav) return favorites.indexOf(a.tz) - favorites.indexOf(b.tz);
-            return 0;
-        });
+    const renderClocks = (clocksToRender = allClocksData) => {
+    // مرتب‌سازی لیست اصلی ساعت‌ها بر اساس لیست علاقه‌مندی‌ها
+    allClocksData = [...timezones].sort((a, b) => {
+        const aIsFav = favorites.includes(a.tz);
+        const bIsFav = favorites.includes(b.tz);
+        if (aIsFav && !bIsFav) return -1;
+        if (!bIsFav && aIsFav) return 1;
+        if (aIsFav && bIsFav) return favorites.indexOf(a.tz) - favorites.indexOf(b.tz);
+        return 0;
+    });
 
-        clocksContainer.innerHTML = ''; // پاک کردن ساعت‌های قبلی
-        const clocksToDisplay = allClocksData.slice(0, visibleClocksCount);
+    // اگر لیست ورودی خالی باشد (یعنی اولین بار اجرا می‌شود)، از لیست کامل استفاده کن
+    if(clocksToRender === allClocksData) {
+        clocksToRender = allClocksData.slice(0, visibleClocksCount);
+    }
 
-        clocksToDisplay.forEach(cityData => {
-            const clockElement = createClockCard(cityData);
-            clocksContainer.appendChild(clockElement);
-        });
+    clocksContainer.innerHTML = ''; // پاک کردن ساعت‌های قبلی
 
-        if(visibleClocksCount >= allClocksData.length) {
-            moreClocksBtn.style.display = 'none';
-        } else {
-            moreClocksBtn.style.display = 'inline-block';
-        }
+    clocksToRender.forEach(cityData => {
+        const clockElement = createClockCard(cityData);
+        clocksContainer.appendChild(clockElement);
+    });
 
-        updateTimes();
-    };
+    // دکمه "More Clocks" فقط زمانی نمایش داده شود که جستجویی فعال نباشد
+    const isSearching = searchInput.value.length > 0;
+    if(visibleClocksCount >= allClocksData.length || isSearching) {
+        moreClocksBtn.style.display = 'none';
+    } else {
+        moreClocksBtn.style.display = 'inline-block';
+    }
+
+    updateTimes();
+};
 
     // تغییر تم با کلیک روی هدر
     themeSwitcher.addEventListener('click', () => {
@@ -135,11 +164,30 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // دکمه "More Clocks"
-    moreClocksBtn.addEventListener('click', () => {
-        visibleClocksCount += 4; // نمایش ۴ ساعت بیشتر
-        renderClocks();
+moreClocksBtn.addEventListener('click', () => {
+    visibleClocksCount += 4; // نمایش ۴ ساعت بیشتر
+    const clocksToDisplay = allClocksData.slice(0, visibleClocksCount);
+    renderClocks(clocksToDisplay);
+});
+    
+    // Event Listener for Search Input
+searchInput.addEventListener('input', (e) => {
+    const searchTerm = e.target.value.toLowerCase().trim();
+
+    if (searchTerm === '') {
+        visibleClocksCount = 8; // ریست کردن تعداد ساعت‌های قابل مشاهده
+        renderClocks(allClocksData.slice(0, visibleClocksCount)); // نمایش لیست اولیه
+        return;
+    }
+
+    const filteredClocks = allClocksData.filter(city => {
+        return city.name.toLowerCase().includes(searchTerm) || 
+               city.name_en.toLowerCase().includes(searchTerm);
     });
 
+    renderClocks(filteredClocks); // نمایش نتایج فیلتر شده
+});
+    
     // راه‌اندازی اولیه
     renderClocks();
     setInterval(updateTimes, 1000); // به‌روزرسانی زمان در هر ثانیه
