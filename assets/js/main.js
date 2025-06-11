@@ -44,50 +44,72 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const createClockCard = (cityData) => {
-        const { name, tz, lat, lng } = cityData;
-        const card = document.createElement('div');
-        card.className = 'clock-card';
-        card.dataset.tz = tz;
-        card.dataset.lat = lat;
-        card.dataset.lng = lng;
+    const { name, tz, lat, lng } = cityData;
+    const card = document.createElement('div');
+    card.className = 'clock-card';
+    card.dataset.tz = tz;
+    card.dataset.lat = lat;
+    card.dataset.lng = lng;
 
-        const isFavorited = favorites.includes(tz);
+    const isFavorited = favorites.includes(tz);
 
-        card.innerHTML = `
-            <div class="city">${name}</div>
-            <div class="time"></div>
-            <div class="date"></div>
-            <span class="favorite-star ${isFavorited ? 'favorited' : ''}" title="Add to favorites">★</span>
-        `;
-        
-        // حرکت نقشه با کلیک روی کارت
-        card.addEventListener('click', (e) => {
-            if (e.target.classList.contains('favorite-star')) return;
-            map.panTo({ lat: parseFloat(lat), lng: parseFloat(lng) });
-            map.setZoom(5);
-        });
-        
-        // مدیریت کلیک روی ستاره
-        card.querySelector('.favorite-star').addEventListener('click', () => toggleFavorite(tz));
-        
-        return card;
-    };
+    // یک div جدید برای نشانگر روز/شب اضافه شده است
+    card.innerHTML = `
+        <div class="city">${name}</div>
+        <div class="time"></div>
+        <div class="date"></div>
+        <span class="favorite-star ${isFavorited ? 'favorited' : ''}" title="Add to favorites">★</span>
+        <div class="day-night-indicator"></div>
+    `;
+    
+    // حرکت نقشه با کلیک روی کارت
+    card.addEventListener('click', (e) => {
+        if (e.target.classList.contains('favorite-star')) return;
+        map.panTo({ lat: parseFloat(lat), lng: parseFloat(lng) });
+        map.setZoom(5);
+    });
+    
+    // مدیریت کلیک روی ستاره
+    card.querySelector('.favorite-star').addEventListener('click', () => toggleFavorite(tz));
+    
+    return card;
+};
 
     const updateTimes = () => {
-        document.querySelectorAll('.clock-card').forEach(card => {
-            const timeZone = card.dataset.tz;
-            try {
-                const now = new Date();
-                const timeString = now.toLocaleTimeString('fa-IR', { timeZone, hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                const dateString = now.toLocaleDateString('fa-IR', { timeZone, weekday: 'long', day: 'numeric', month: 'long' });
+    const now = new Date(); // فقط یک بار آبجکت Date را می‌سازیم برای بهینه‌سازی
 
-                card.querySelector('.time').textContent = timeString;
-                card.querySelector('.date').textContent = dateString;
-            } catch (error) {
-                card.querySelector('.time').textContent = 'خطا در منطقه زمانی';
+    document.querySelectorAll('.clock-card').forEach(card => {
+        const timeZone = card.dataset.tz;
+        try {
+            // نمایش زمان و تاریخ
+            const timeString = now.toLocaleTimeString('fa-IR', { timeZone, hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const dateString = now.toLocaleDateString('fa-IR', { timeZone, weekday: 'long', day: 'numeric', month: 'long' });
+
+            card.querySelector('.time').textContent = timeString;
+            card.querySelector('.date').textContent = dateString;
+            
+            // --- بخش جدید: منطق تشخیص روز و شب ---
+            // استخراج ساعت در فرمت ۲۴ ساعته برای منطقه زمانی مشخص
+            const hourString = now.toLocaleTimeString('en-US', { timeZone, hour: '2-digit', hour12: false });
+            const currentHour = parseInt(hourString.split(':')[0]); // ساعت را به عدد تبدیل می‌کنیم
+
+            const indicator = card.querySelector('.day-night-indicator');
+            
+            // اگر ساعت بین ۶ صبح (شامل) و ۶ عصر (غیرشامل) باشد، روز است
+            if (currentHour >= 6 && currentHour < 18) {
+                indicator.innerHTML = '☀️';
+                indicator.title = 'Day';
+            } else {
+                indicator.innerHTML = '🌙';
+                indicator.title = 'Night';
             }
-        });
-    };
+            // --------------------------------------
+
+        } catch (error) {
+            card.querySelector('.time').textContent = 'خطا در منطقه زمانی';
+        }
+    });
+};
 
     const toggleFavorite = (tz) => {
     const index = favorites.indexOf(tz);
