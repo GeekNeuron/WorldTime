@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { name: "ریو", name_en: "Rio", tz: "America/Sao_Paulo", lat: -22.9068, lng: -43.1729 }
     ];
 
-    let visibleClocksCount = 8;
+    let visibleClocksCount = 6;
 
     // تابع اصلی برای راه‌اندازی نقشه
     window.initMap = () => {
