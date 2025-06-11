@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const body = document.body;
 
     let map;
-    // خواندن لیست علاقه‌مندی‌ها از حافظه مرورگر یا استفاده از لیست پیش‌فرض
+    // خواندن لیست علاقه‌مندی‌ها از حافظه مرورگر یا استف.اده از لیست پیش‌فرض
     let favorites = JSON.parse(localStorage.getItem('worldTimeFavorites')) || ['America/New_York', 'Europe/London', 'Asia/Tokyo', 'Australia/Sydney', 'Europe/Paris', 'Europe/Moscow', 'Asia/Dubai', 'America/Los_Angeles'];
     let allClocksData = [];
 
