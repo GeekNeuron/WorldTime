@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     const clocksContainer = document.getElementById('clocks-container');
+    const searchInput = document.getElementById('search-input');
     const themeSwitcher = document.getElementById('theme-switcher');
     const moreClocksBtn = document.getElementById('more-clocks-btn');
     const body = document.body;
